@@ -6,12 +6,48 @@ var CONFIG = {
   MAP_URL:   "",                                   // Googleマップの店舗URL
   IG_URL:    "",                                   // Instagram
   LAW_URL:   "",                                   // 特定商取引法に基づく表記（STORESのページでも可）
-  HOURS:     { open: "10:30", close: "20:00", closed: [0], prep: 25 }  // 受付時間・定休日(0=日)・調理時間(分)
+  HOURS:     { open: "10:30", close: "20:00", closed: [0], prep: 25 }, // 受付時間・定休日(0=日)・調理時間(分)
+  GA_ID:     "",                                   // GA4 測定ID（例 G-XXXXXXXXXX）。入れると計測開始
+  GSC_META:  ""                                    // Search Console の所有権確認コード（HTMLタグ方式の content 値）
 };
 
 (function () {
   "use strict";
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---- 計測：GA4（測定IDがある時だけ読み込む）＋ Search Console 確認タグ ---- */
+  if (CONFIG.GSC_META) {
+    var gm = document.createElement("meta"); gm.name = "google-site-verification"; gm.content = CONFIG.GSC_META;
+    document.head.appendChild(gm);
+  }
+  function track(name, params) { if (window.gtag) window.gtag("event", name, params || {}); }
+  if (CONFIG.GA_ID) {
+    var gs = document.createElement("script"); gs.async = true;
+    gs.src = "https://www.googletagmanager.com/gtag/js?id=" + CONFIG.GA_ID;
+    document.head.appendChild(gs);
+    window.dataLayer = window.dataLayer || [];
+    window.gtag = function () { window.dataLayer.push(arguments); };
+    window.gtag("js", new Date());
+    window.gtag("config", CONFIG.GA_ID, { anonymize_ip: true });
+    // 注文ボタン・LINE・地図のクリックを計測（どのボタンが押されたか）
+    document.addEventListener("click", function (ev) {
+      var a = ev.target.closest("a"); if (!a) return;
+      if (a.hasAttribute("data-order")) track("order_click", { location: a.closest("section,header,.sticky,.float") ? (a.closest("section,header,.sticky,.float").className || a.closest("section,header,.sticky,.float").id) : "" , label: a.textContent.trim() });
+      else if (/line\.me/.test(a.href)) track("line_click", { label: a.textContent.trim() });
+      else if (a.hasAttribute("data-map")) track("map_click", {});
+    }, true);
+    // スクロール到達（メニュー・注文の流れ・FAQ）
+    if ("IntersectionObserver" in window) {
+      var seen = {};
+      new IntersectionObserver(function (es) { es.forEach(function (e) {
+        if (e.isIntersecting && !seen[e.target.id]) { seen[e.target.id] = 1; track("section_view", { section: e.target.id }); }
+      }); }, { threshold: 0.4 }).observe && ["bowls", "order", "access", "members"].forEach(function (id) {
+        var el = document.getElementById(id); if (el) new IntersectionObserver(function (es) { es.forEach(function (e) {
+          if (e.isIntersecting && !seen[id]) { seen[id] = 1; track("section_view", { section: id }); }
+        }); }, { threshold: 0.4 }).observe(el);
+      });
+    }
+  }
 
   /* ---- 出現：箱が開く / 行が上がる / 8pxフェード ---- */
   var targets = document.querySelectorAll("[data-open],[data-lines],[data-reveal]");
