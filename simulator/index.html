@@ -1,0 +1,388 @@
+<!doctype html><html lang="ja"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex, nofollow"><title>料金シミュレーター｜チェンジアサイ様</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Shippori+Mincho:wght@500&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap">
+<style>
+:root{
+  --bg:#F7F5F2; --surface:#FFFFFF; --surface-2:#EFECE7; --fg:#0C0C0C; --mut:#6B6661; --faint:#9A9691;
+  --line:#DAD5CE; --ink:#0C0C0C; --ink-fg:#F3F1EE; --gold:#B89A6A; --gold-soft:rgba(184,154,106,.35); --ok:#1C7A4E; --ok-soft:#E3F0E9;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#121212; --surface:#1A1A1A; --surface-2:#232323; --fg:#EDEAE6; --mut:#A8A39D; --faint:#7C7772;
+  --line:#2E2E2E; --ink:#F3F1EE; --ink-fg:#0C0C0C; --gold:#C9AE7E; --gold-soft:rgba(201,174,126,.35); --ok:#5CC593; --ok-soft:#17281F;
+}}
+:root[data-theme="dark"]{
+  --bg:#121212; --surface:#1A1A1A; --surface-2:#232323; --fg:#EDEAE6; --mut:#A8A39D; --faint:#7C7772;
+  --line:#2E2E2E; --ink:#F3F1EE; --ink-fg:#0C0C0C; --gold:#C9AE7E; --gold-soft:rgba(201,174,126,.35); --ok:#5CC593; --ok-soft:#17281F;
+}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:"Zen Kaku Gothic New","Hiragino Sans",system-ui,sans-serif;font-size:15.5px;line-height:1.85;-webkit-font-smoothing:antialiased;padding-bottom:150px;}
+.wrap{max-width:760px;margin:0 auto;padding:0 20px 40px;}
+header{padding:48px 0 22px;border-bottom:1px solid var(--gold-soft);}
+.kicker{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:15px;letter-spacing:.18em;color:var(--gold);}
+.kicker::before{content:"";display:inline-block;width:28px;height:1px;background:var(--gold);vertical-align:middle;margin-right:12px;}
+h1{font-family:"Shippori Mincho",serif;font-weight:500;font-size:clamp(24px,4vw,32px);letter-spacing:.06em;margin:10px 0 0;}
+.lede{margin:12px 0 0;color:var(--mut);font-size:14.5px;}
+h2{font-family:"Shippori Mincho",serif;font-weight:500;font-size:19px;letter-spacing:.06em;margin:40px 0 6px;padding-bottom:8px;border-bottom:1px solid var(--fg);}
+h2 small{font-family:"Cormorant Garamond",serif;font-style:italic;font-size:14px;color:var(--gold);letter-spacing:.14em;margin-right:10px;}
+h3{font-size:15px;font-weight:700;margin:22px 0 8px;}
+.hint{font-size:13.5px;color:var(--mut);margin:0 0 12px;}
+/* モード切替 */
+.modes{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:22px;}
+.mode{border:1px solid var(--line);background:var(--surface);padding:12px 10px;text-align:center;cursor:pointer;font-size:13.5px;letter-spacing:.04em;}
+.mode b{display:block;font-family:"Cormorant Garamond",serif;font-style:italic;font-size:14px;letter-spacing:.14em;color:var(--gold);}
+.mode.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;background:var(--surface-2);}
+.pane{display:none;} .pane.on{display:block;}
+/* 選択肢 */
+.opt{display:grid;grid-template-columns:28px 1fr auto;gap:12px;align-items:start;background:var(--surface);border:1px solid var(--line);padding:14px 16px;margin-bottom:8px;cursor:pointer;transition:border-color .2s;}
+.opt:hover{border-color:var(--gold);}
+.opt.on{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
+.opt.req{cursor:default;background:var(--surface-2);}
+.opt input{width:18px;height:18px;margin:5px 0 0 2px;accent-color:#0C0C0C;}
+.opt b{display:block;font-weight:500;font-size:15.5px;}
+.opt span.d{display:block;font-size:13px;color:var(--mut);margin-top:2px;}
+.opt .pair{display:block;font-size:12px;color:var(--gold);margin-top:4px;}
+.opt .pair.on{color:var(--ok);font-weight:500;}
+.opt .p{font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:600;white-space:nowrap;padding-top:2px;font-variant-numeric:tabular-nums;}
+.opt .p small{font-family:inherit;font-size:12px;color:var(--mut);font-weight:400;}
+.badge{display:inline-block;font-size:11px;letter-spacing:.1em;padding:1px 7px;background:var(--gold);color:#fff;margin-left:6px;vertical-align:middle;}
+.tag{display:inline-block;font-size:11px;letter-spacing:.1em;padding:1px 7px;background:var(--ink);color:var(--ink-fg);margin-left:6px;vertical-align:middle;}
+/* 予算 */
+.budget{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.field{background:var(--surface);border:1px solid var(--line);padding:14px 16px;}
+.field label{display:block;font-size:12.5px;letter-spacing:.08em;color:var(--mut);}
+.field .in{display:flex;align-items:baseline;gap:6px;margin-top:4px;}
+.field input{width:100%;font:600 24px "Cormorant Garamond",serif;border:0;border-bottom:1px solid var(--gold);background:transparent;color:var(--fg);padding:4px 0;outline:0;}
+.field .yen{font-family:"Cormorant Garamond",serif;font-size:20px;}
+.reco{margin-top:14px;}
+.reco .r{background:var(--surface);border:1px solid var(--line);padding:16px 18px;margin-bottom:10px;}
+.reco .r.best{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold) inset;}
+.reco .r b{font-size:15.5px;}
+.reco .r .amt{float:right;font-family:"Cormorant Garamond",serif;font-size:20px;font-weight:600;}
+.reco .r ul{margin:8px 0 0;padding:0 0 0 16px;font-size:13.5px;color:var(--mut);}
+.reco .r .rest{font-size:12.5px;color:var(--gold);margin-top:6px;}
+/* 店舗 */
+.store{background:var(--surface);border:1px solid var(--line);padding:18px 18px 8px;margin-bottom:12px;}
+.store h3{margin:0 0 4px;display:flex;justify-content:space-between;align-items:center;}
+.store h3 .sub{font-size:12px;color:var(--mut);font-weight:400;}
+.store .sel{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;}
+.store .sel label{border:1px solid var(--line);padding:6px 12px;font-size:13.5px;cursor:pointer;background:var(--surface-2);}
+.store .sel label.on{border-color:var(--gold);background:var(--gold-soft);}
+.store .sel input{display:none;}
+.store .sum{display:flex;justify-content:space-between;font-size:13.5px;color:var(--mut);border-top:1px solid var(--line);padding:10px 0 6px;margin-top:6px;}
+.store .sum b{font-family:"Cormorant Garamond",serif;font-size:17px;color:var(--fg);}
+.off{font-size:12px;color:var(--ok);}
+/* 合計バー */
+.bar{position:fixed;left:0;right:0;bottom:0;background:var(--ink);color:var(--ink-fg);border-top:1px solid var(--gold);padding:14px 20px calc(14px + env(safe-area-inset-bottom));z-index:10;}
+.bar-in{max-width:760px;margin:0 auto;display:grid;grid-template-columns:1fr 1fr;gap:8px 20px;align-items:end;}
+.bar .l{font-size:11.5px;letter-spacing:.14em;color:var(--gold);font-family:"Cormorant Garamond",serif;font-style:italic;}
+.bar .v{font-family:"Cormorant Garamond",serif;font-size:30px;font-weight:600;line-height:1.1;font-variant-numeric:tabular-nums;}
+.bar .v small{font-family:"Zen Kaku Gothic New",sans-serif;font-size:12px;color:#9A9691;margin-left:4px;font-weight:400;}
+.bar .sub{font-size:12px;color:#B8B3AD;margin-top:2px;}
+.bar .set{grid-column:1/-1;background:rgba(184,154,106,.14);border:1px solid var(--gold-soft);padding:10px 14px;font-size:13.5px;display:none;}
+.bar .set b{color:var(--gold);}
+.bar .set.on{display:block;}
+.summary{margin-top:28px;background:var(--surface);border:1px solid var(--line);padding:18px 20px;}
+.summary h3{margin:0 0 8px;}
+.summary ul{margin:0;padding:0;list-style:none;font-size:14px;color:var(--mut);}
+.summary li{padding:6px 0;border-top:1px solid var(--line);display:flex;justify-content:space-between;gap:12px;}
+.summary li span:last-child{font-family:"Cormorant Garamond",serif;font-size:17px;font-weight:600;color:var(--fg);white-space:nowrap;}
+.note{background:var(--ok-soft);border-left:3px solid var(--ok);padding:12px 16px;font-size:13.5px;color:var(--mut);margin-top:16px;}
+.note b{color:var(--fg);}
+.fine{font-size:12.5px;color:var(--faint);margin-top:24px;line-height:1.7;}
+@media(max-width:520px){.opt{grid-template-columns:24px 1fr;} .opt .p{grid-column:2;padding-top:0;} .bar .v{font-size:26px;} .budget{grid-template-columns:1fr;} .modes{grid-template-columns:1fr;}}
+</style></head><body>
+
+<div class="wrap">
+<header>
+  <div class="kicker">Price Simulator</div>
+  <h1>料金シミュレーター</h1>
+  <p class="lede">チェンジアサイ 藤山様用。3つの見方があります。①必要な機能から選ぶ ②月の予算から選ぶ ③ジム・パーソナルジムも一緒に契約した場合。</p>
+  <div class="modes">
+    <div class="mode on" data-mode="a"><b>01</b>機能から選ぶ</div>
+    <div class="mode" data-mode="b"><b>02</b>予算から選ぶ</div>
+    <div class="mode" data-mode="c"><b>03</b>複数店舗で契約</div>
+  </div>
+</header>
+
+<!-- ===== A. 機能から ===== -->
+<div class="pane on" id="pane-a">
+  <h2><small>01</small>初期費用（一度きり）</h2>
+  <p class="hint">最初に作るもの。あとから足すこともできます。</p>
+  <div id="init"></div>
+
+  <h2><small>02</small>月額サポート</h2>
+  <p class="hint">基本保守は必須。あとは必要なものだけ。目安：保守だけ 5,000／配信とGoogleも任せる Basic 9,000／全部 Standard 18,000。</p>
+  <div id="monthly"></div>
+
+  <h2><small>03</small>契約の形</h2>
+  <p class="hint">1年契約なら、月払いでもLP制作費は ¥0 です。</p>
+  <div id="pay" class="radio-group"></div>
+
+  <div class="summary" id="summary"></div>
+  <div class="note" id="setnote" hidden></div>
+</div>
+
+<!-- ===== B. 予算から ===== -->
+<div class="pane" id="pane-b">
+  <h2><small>01</small>月にいくらまでなら続けられますか</h2>
+  <p class="hint">金額を入れると、その中でいちばん効く組み合わせを出します。初期費用は1年契約（月払い）を前提に計算します。</p>
+  <div class="budget">
+    <div class="field"><label>月の予算</label><div class="in"><span class="yen">¥</span><input id="bMon" type="number" inputmode="numeric" value="10000" step="1000" min="0"></div></div>
+    <div class="field"><label>初期費用の上限（任意）</label><div class="in"><span class="yen">¥</span><input id="bInit" type="number" inputmode="numeric" value="20000" step="5000" min="0"></div></div>
+  </div>
+  <div class="reco" id="reco"></div>
+  <div class="note"><b>考え方：</b>基本保守（5,000）を土台に、効く順に足します。配信とGoogleが揃うと「呼び戻し」と「新規」の両方が動くので、まず Basic（9,000）を目指すのがおすすめです。</div>
+</div>
+
+<!-- ===== C. 複数店舗 ===== -->
+<div class="pane" id="pane-c">
+  <h2><small>01</small>店舗ごとに選ぶ</h2>
+  <p class="hint">2店舗目以降は、初期費用・月額とも <b>20%オフ</b>。共通で使えるもの（LINEの設計・レポートの型）が多いためです。</p>
+  <div id="stores"></div>
+  <div class="summary" id="summaryC"></div>
+  <div class="note"><b>ジム・パーソナルジムの中身：</b>LINE公式＋エルメの構築（リッチメニュー・あいさつ・自動応答・ステップ配信の設計）、予約の受付（エルメの予約機能、または既存の予約ツールとの連携）、会員向けの配信。詳しい設計はヒアリング後にご提案します。</div>
+</div>
+
+<p class="fine">
+・金額はすべて税込。<br>
+・1年契約（月払い・年一括どちらでも）の場合、LP制作費はいただきません。1年未満で解約する場合はLP制作費 ¥20,000 を精算します（年一括は未経過月分から差し引き）。年一括は10ヶ月分の金額（2ヶ月分お得）。<br>
+・契約期間なしの月払いはいつでも解約できます（LP制作費 ¥20,000）。<br>
+・初期費用は着手時50%・公開時50%。月払いは月末締め・翌月10日まで。<br>
+・含まれないもの：出張撮影、広告費、印刷代、各サービスの利用料（STORES決済手数料 3.6%＋10円、エルメ有料プラン、サーバー代）、Uber Eats／出前館の導入、検索順位・AI検索での表示の保証。<br>
+・プランの範囲を超える作業は単品でお受けします（LINE配信1通 ¥1,500、変更1件 ¥1,000、Google投稿1回 ¥1,000、口コミ返信1件 ¥500、IG画像1枚 ¥1,500、SEO記事1本 ¥8,000）。
+</p>
+</div>
+
+<div class="bar">
+  <div class="bar-in">
+    <div><div class="l">Initial</div><div class="v" id="tInit">¥0</div><div class="sub" id="tInitSub"></div></div>
+    <div><div class="l">Monthly</div><div class="v" id="tMon">¥0<small>/月</small></div><div class="sub" id="tMonSub"></div></div>
+    <div class="set" id="tSet"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var yen=function(n){return '¥'+Math.round(n).toLocaleString('ja-JP');};
+  /* ===== データ ===== */
+  var INIT=[
+    {id:'stores',name:'STORES＋LINE公式＋エルメ 初期構築',d:'商品・トッピング登録（30点まで）／受取時間／クーポン／4分割リッチメニュー（画像込み）／あいさつ・自動応答／エルメ接続／テスト注文／操作説明',p:20000,on:true},
+    {id:'lp',name:'LP（ホームページ）制作',d:'この店専用のデザイン／文章・構成／写真の色味統一／注文ボタンの導線／受付中・終了の自動表示／GA4・Search Console／SEO・AI検索対策の土台（構造化データ）／公開作業／制作期間内の修正 無制限',p:20000,on:true,lpfree:true},
+    {id:'ga',name:'計測設定（GA4・Search Console）',d:'既存サイトに入れる場合。LPを作る場合は込み',p:5000,on:false,gaonly:true},
+    {id:'gbp',name:'Googleビジネスプロフィール 初期設定',d:'カテゴリ・営業時間・説明文・商品登録・写真・「注文」ボタン・Q&A（月額サポートをご契約の場合は無料）',p:10000,on:true,gbp:true},
+  ];
+  var MON=[
+    {id:'base',name:'基本保守',d:'LP・LINE・STORESの保守／メニュー・価格・営業時間の変更 月3件まで／LINEで質問し放題',p:5000,on:true,req:true},
+    {id:'chg',name:'変更枠を月10件に',d:'写真の差し替え・新作追加・季節メニューのLP反映を含む',p:3000,on:true},
+    {id:'line2',name:'LINE配信 月2通',d:'原稿作成→ご確認→画像→配信設定',p:3000,on:false,group:'line'},
+    {id:'line4',name:'LINE配信 月4通＋クーポン設計',d:'雨の日・誕生月などの限定クーポンも設計',p:5000,on:true,group:'line'},
+    {id:'step',name:'エルメ ステップ配信・セグメント配信',d:'友だち追加後の自動配信の設計と、月次の手直し',p:2000,on:true},
+    {id:'gbp2',name:'Google運用（投稿 月2回＋口コミ返信の下書き）',d:'',p:2000,on:false,group:'gbp'},
+    {id:'gbp4',name:'Google運用（投稿 週1＋口コミ返信 月20件＋写真追加）',d:'「アサイー＋地名」で探す人の受け皿を育てる',p:5000,on:true,group:'gbp'},
+    {id:'ig',name:'Instagram投稿画像 月2枚',d:'LPと同じトーンで作成',p:2000,on:true},
+    {id:'seo',name:'SEO記事 月1本',d:'「アサイー ◯◯駅」などの検索語に合わせた記事を作成・公開',p:8000,on:false},
+    {id:'rep',name:'月次レポート＋月1回30分のオンライン打合せ',d:'注文数・友だち数・Google表示回数・GA4（アクセス・注文クリック）・Search Console（検索語）と、次の一手',p:2000,on:true},
+  ];
+  var SETS=[
+    {ids:['base'],price:5000,name:'Light'},
+    {ids:['base','line2','gbp2'],price:9000,name:'Basic セット'},
+    {ids:['base','chg','line4','step','gbp4','ig','rep'],price:18000,name:'Standard セット'}
+  ];
+  var STD=SETS[2];
+  var BUNDLES=[
+    {name:'LINEセット',ids:['line4','step'],off:1000},
+    {name:'Googleセット',ids:['gbp4','ig'],off:1000},
+    {name:'見える化セット',ids:['chg','rep'],off:1000},
+  ];
+  var PAY=[
+    {id:'c',name:'1年契約・月払い',d:'毎月のお支払い。LP制作費 ¥0（1年未満の解約時のみ ¥20,000 を精算）'},
+    {id:'y',name:'1年契約・年一括',d:'10ヶ月分をまとめて（2ヶ月分お得）。LP制作費 ¥0'},
+    {id:'m',name:'契約期間なし・月払い',d:'いつでも解約可。LP制作費 ¥20,000'}
+  ];
+  var state={pay:'c',mode:'a'};
+  INIT.concat(MON).forEach(function(o){state[o.id]=!!o.on;});
+  var byId=function(list,id){return list.filter(function(o){return o.id===id;})[0];};
+
+  /* ===== 共通計算 ===== */
+  function priceMonthly(ids){ // ids: 選択中モジュール → {mon, shown, setName, off, hits}
+    var mon=0; ids.forEach(function(id){mon+=byId(MON,id).p;});
+    var key=ids.slice().sort().join(',');
+    var hit=SETS.filter(function(S){return S.ids.slice().sort().join(',')===key;})[0];
+    if(hit) return {mon:mon,shown:hit.price,setName:hit.name,off:mon-hit.price,hits:[]};
+    var off=0,hits=[];
+    BUNDLES.forEach(function(b){ if(b.ids.every(function(x){return ids.indexOf(x)>=0;})){off+=b.off;hits.push(b.name);} });
+    var shown=mon-off;
+    if(shown>STD.price && STD.ids.every(function(x){return ids.indexOf(x)>=0;})) return {mon:mon,shown:STD.price,setName:STD.name,off:mon-STD.price,hits:[]};
+    return {mon:mon,shown:shown,setName:null,off:off,hits:hits};
+  }
+  function priceInit(sel,pay,hasMonthly){ // sel: {stores,lp,ga,gbp}
+    var t=0,lines=[];
+    INIT.forEach(function(o){ if(!sel[o.id])return; var p=o.p;
+      if(o.lpfree&&pay!=='m')p=0; if(o.gbp&&hasMonthly)p=0; if(o.gaonly&&sel.lp)p=0;
+      t+=p; lines.push([o.name,p]); });
+    return {total:t,lines:lines};
+  }
+
+  /* ===== A ===== */
+  function renderA(){
+    ['init','monthly'].forEach(function(k){
+      var list=k==='init'?INIT:MON, root=document.getElementById(k); root.innerHTML='';
+      list.forEach(function(o){
+        var lab=document.createElement('label'); lab.className='opt'+(state[o.id]?' on':'')+(o.req?' req':'');
+        var free=(o.lpfree&&state.pay!=='m')||(o.gbp&&anyMonthly())||(o.gaonly&&state.lp);
+        var pair=(k==='monthly')?BUNDLES.filter(function(b){return b.ids.indexOf(o.id)>=0;}).map(function(b){
+            var other=b.ids.filter(function(x){return x!==o.id;}).map(function(x){return byId(MON,x).name;}).join('・');
+            var done=b.ids.every(function(x){return state[x];});
+            return '<span class="pair'+(done?' on':'')+'">'+(done?'✓ ':'')+b.name+'：「'+other+'」と合わせると '+yen(b.off)+' 引き</span>';
+          }).join(''):'';
+        lab.innerHTML='<input type="checkbox" '+(state[o.id]?'checked':'')+(o.req?' disabled':'')+'>'+
+          '<div><b>'+o.name+(o.req?'<span class="tag">必須</span>':'')+(free?'<span class="badge">¥0</span>':'')+'</b><span class="d">'+o.d+'</span>'+pair+'</div>'+
+          '<div class="p">'+(free?'<s style="color:var(--faint);font-size:15px">'+yen(o.p)+'</s> ¥0':(k==='init'?yen(o.p):'+'+yen(o.p)+'<small>/月</small>'))+'</div>';
+        lab.querySelector('input').addEventListener('change',function(e){
+          if(o.req)return; state[o.id]=e.target.checked;
+          if(o.group&&e.target.checked){list.forEach(function(x){if(x.group===o.group&&x.id!==o.id)state[x.id]=false;});}
+          renderA();
+        });
+        root.appendChild(lab);
+      });
+    });
+    var pr=document.getElementById('pay'); pr.innerHTML='';
+    PAY.forEach(function(o){
+      var lab=document.createElement('label'); lab.className='opt'+(state.pay===o.id?' on':'');
+      lab.innerHTML='<input type="radio" name="pay" '+(state.pay===o.id?'checked':'')+'><div><b>'+o.name+(o.id==='c'?'<span class="tag">おすすめ</span>':'')+'</b><span class="d">'+o.d+'</span></div><div class="p"></div>';
+      lab.querySelector('input').addEventListener('change',function(){state.pay=o.id;renderA();});
+      pr.appendChild(lab);
+    });
+    calcA();
+  }
+  function anyMonthly(){return MON.some(function(o){return state[o.id];});}
+  function calcA(){
+    var ids=MON.filter(function(o){return state[o.id];}).map(function(o){return o.id;});
+    var m=priceMonthly(ids);
+    var sel={}; INIT.forEach(function(o){sel[o.id]=state[o.id];});
+    var ini=priceInit(sel,state.pay,ids.length>0);
+    var year= state.pay==='y' ? m.shown*10 : null;
+    var note='';
+    if(m.setName) note='選んだ内容は <b>'+m.setName+'</b> と同じです。バラで '+yen(m.mon)+' → セットなら <b>'+yen(m.shown)+'/月</b>（'+yen(m.off)+' お得）';
+    else if(m.hits.length) note=m.hits.join('＋')+' で <b>'+yen(m.off)+' 引き</b>（バラ '+yen(m.mon)+' → '+yen(m.shown)+'）';
+    setBar(ini.total, (state.pay!=='m')&&state.lp?'LP制作費 ¥20,000 は1年契約で ¥0':'着手時50%・公開時50%', m.shown, year!==null?'年一括 '+yen(year)+'（実質 '+yen(year/12)+'/月）':(state.pay==='c'?'1年契約・毎月払い':'月末締め・翌月10日払い'), note);
+    var h='<h3>選んだ内容</h3><ul>';
+    ini.lines.forEach(function(l){h+='<li><span>'+l[0]+'</span><span>'+yen(l[1])+'</span></li>';});
+    ids.forEach(function(id){var o=byId(MON,id);h+='<li><span>'+o.name+'</span><span>+'+yen(o.p)+'/月</span></li>';});
+    if(m.off>0)h+='<li><span>セット割（'+(m.setName||m.hits.join('・'))+'）</span><span>−'+yen(m.off)+'/月</span></li>';
+    h+='<li><span><b>初期費用 合計</b></span><span>'+yen(ini.total)+'</span></li>';
+    h+='<li><span><b>月額 合計</b></span><span>'+yen(m.shown)+'/月</span></li>';
+    if(year!==null)h+='<li><span><b>年一括</b></span><span>'+yen(year)+'</span></li>';
+    h+='<li><span><b>1年目の総額</b></span><span>'+yen(ini.total+(year!==null?year:m.shown*12))+'</span></li></ul>';
+    document.getElementById('summary').innerHTML=h;
+    var n=document.getElementById('setnote'); n.hidden=!note; n.innerHTML=note;
+  }
+
+  /* ===== B：予算から ===== */
+  var PRIORITY=['line2','gbp2','chg','line4','gbp4','step','rep','ig','seo']; // 効く順
+  function planWithin(budget){
+    // 1) セット価格で入る最上位
+    var best=null; SETS.forEach(function(S){ if(S.price<=budget) best=S; });
+    var ids=best?best.ids.slice():['base'];
+    var cost=best?best.price:5000;
+    if(cost>budget) return {ids:[],cost:0,none:true};
+    // 2) 残りで単品を効く順に足す（同グループは上位に置き換え）
+    PRIORITY.forEach(function(id){
+      if(ids.indexOf(id)>=0) return;
+      var o=byId(MON,id);
+      var trial=ids.slice();
+      if(o.group){ trial=trial.filter(function(x){return byId(MON,x).group!==o.group;}); }
+      trial.push(id);
+      var pm=priceMonthly(trial);
+      if(pm.shown<=budget && pm.shown>=cost){ ids=trial; cost=pm.shown; }
+    });
+    return {ids:ids,cost:cost,pm:priceMonthly(ids)};
+  }
+  function renderB(){
+    var bm=+document.getElementById('bMon').value||0, bi=+document.getElementById('bInit').value||0;
+    var root=document.getElementById('reco'); root.innerHTML='';
+    var r=planWithin(bm);
+    var sel={stores:true,lp:true,ga:false,gbp:true};
+    var ini=priceInit(sel,'c',true);
+    var cards=[];
+    if(r.none){ cards.push({t:'この予算だと月額サポートは付けられません',amt:'',ul:['初期構築だけ（STORES＋LINE＋LP＋Google）を ¥50,000 で作って納品し、運用はご自身で行う形になります'],rest:'',best:true}); }
+    else{
+      var names=r.ids.map(function(id){return byId(MON,id).name;});
+      cards.push({t:'この予算でのおすすめ',amt:yen(r.cost)+'/月',ul:names,rest:(r.pm.setName?'＝ '+r.pm.setName+'。':'')+(bm-r.cost>0?'あと '+yen(bm-r.cost)+' 余ります。':'ぴったりです。'),best:true});
+      // 参考：1つ上と1つ下
+      SETS.forEach(function(S){ if(S.price>bm && S.price<=bm*1.5) cards.push({t:'あと '+yen(S.price-bm)+' 足すと '+S.name,amt:yen(S.price)+'/月',ul:S.ids.map(function(id){return byId(MON,id).name;}),rest:'',best:false}); });
+    }
+    cards.forEach(function(c){
+      var d=document.createElement('div'); d.className='r'+(c.best?' best':'');
+      d.innerHTML='<span class="amt">'+c.amt+'</span><b>'+c.t+'</b><ul>'+c.ul.map(function(x){return '<li>'+x+'</li>';}).join('')+'</ul>'+(c.rest?'<div class="rest">'+c.rest+'</div>':'');
+      root.appendChild(d);
+    });
+    var initNote = r.none ? '初期のみ ¥50,000（Google初期設定 ¥10,000 を含む）' : (ini.total<=bi||!bi ? '1年契約・月払いで LP ¥0・Google初期設定 ¥0' : '初期上限を超えています（最低 '+yen(ini.total)+'）');
+    setBar(r.none?50000:ini.total, initNote, r.none?0:r.cost, r.none?'運用はご自身で':'1年契約・毎月払い', r.none?'':(r.pm&&r.pm.setName?'この組み合わせは <b>'+r.pm.setName+'</b> と同じです':''));
+  }
+
+  /* ===== C：複数店舗 ===== */
+  var STORES=[
+    {id:'acai',name:'チェンジアサイ',sub:'アサイーボウル（テイクアウト）',init:[{id:'stores',name:'STORES＋LINE＋エルメ 構築',p:20000,on:true},{id:'lp',name:'LP制作',p:20000,on:true,lpfree:true},{id:'gbp',name:'Google初期設定',p:10000,on:true,gbp:true}],plan:'basic'},
+    {id:'gym',name:'フィットネスジム',sub:'LINE公式＋エルメ・予約・会員配信',init:[{id:'lme',name:'LINE公式＋エルメ 構築（リッチメニュー・ステップ配信の設計）',p:15000,on:true},{id:'rsv',name:'予約の受付（エルメ予約 or 既存ツール連携）',p:15000,on:true},{id:'lp',name:'LP制作',p:20000,on:false,lpfree:true},{id:'gbp',name:'Google初期設定',p:10000,on:true,gbp:true}],plan:'basic'},
+    {id:'personal',name:'パーソナルジム',sub:'LINE公式＋エルメ・予約・会員配信',init:[{id:'lme',name:'LINE公式＋エルメ 構築（リッチメニュー・ステップ配信の設計）',p:15000,on:true},{id:'rsv',name:'予約の受付（エルメ予約 or 既存ツール連携）',p:15000,on:true},{id:'lp',name:'LP制作',p:20000,on:false,lpfree:true},{id:'gbp',name:'Google初期設定',p:10000,on:true,gbp:true}],plan:'light'},
+  ];
+  var PLANS={none:{name:'月額なし',p:0},light:{name:'Light',p:5000},basic:{name:'Basic',p:9000},standard:{name:'Standard',p:18000}};
+  var MULTI_OFF=0.2;
+  STORES.forEach(function(s){s.on=true; s.init.forEach(function(i){s['i_'+i.id]=i.on;});});
+  function storeCalc(s,idx){
+    var hasM=s.plan!=='none', ini=0, lines=[];
+    s.init.forEach(function(i){ if(!s['i_'+i.id])return; var p=i.p; if(i.lpfree&&hasM)p=0; if(i.gbp&&hasM)p=0; ini+=p; lines.push([i.name,p]); });
+    var mon=PLANS[s.plan].p;
+    var off=idx>0?MULTI_OFF:0;
+    return {ini:ini,mon:mon,iniOff:ini*(1-off),monOff:mon*(1-off),off:off,lines:lines};
+  }
+  function renderC(){
+    var root=document.getElementById('stores'); root.innerHTML='';
+    var active=STORES.filter(function(s){return s.on;});
+    var tI=0,tM=0, rows=[];
+    STORES.forEach(function(s){
+      var idx=active.indexOf(s);
+      var d=document.createElement('div'); d.className='store';
+      var c=s.on?storeCalc(s,idx):null;
+      var h='<h3><span><label style="cursor:pointer"><input type="checkbox" data-store="'+s.id+'" '+(s.on?'checked':'')+' style="accent-color:#0C0C0C;margin-right:8px">'+s.name+'</label></span><span class="sub">'+s.sub+(idx>0&&s.on?' <span class="off">2店舗目以降 −20%</span>':'')+'</span></h3>';
+      if(s.on){
+        h+='<div class="hint" style="margin:6px 0 2px">初期に作るもの</div><div class="sel">'+s.init.map(function(i){return '<label class="'+(s['i_'+i.id]?'on':'')+'"><input type="checkbox" data-init="'+s.id+':'+i.id+'" '+(s['i_'+i.id]?'checked':'')+'>'+i.name+'　'+((i.lpfree||i.gbp)&&s.plan!=='none'?'¥0':yen(i.p))+'</label>';}).join('')+'</div>';
+        h+='<div class="hint" style="margin:6px 0 2px">月額</div><div class="sel">'+Object.keys(PLANS).map(function(k){return '<label class="'+(s.plan===k?'on':'')+'"><input type="radio" name="plan-'+s.id+'" data-plan="'+s.id+':'+k+'" '+(s.plan===k?'checked':'')+'>'+PLANS[k].name+(PLANS[k].p?'　'+yen(PLANS[k].p):'')+'</label>';}).join('')+'</div>';
+        h+='<div class="sum"><span>初期 '+(c.off?'<s>'+yen(c.ini)+'</s> ':'')+'<b>'+yen(c.iniOff)+'</b></span><span>月額 '+(c.off&&c.mon?'<s>'+yen(c.mon)+'</s> ':'')+'<b>'+yen(c.monOff)+'</b></span></div>';
+        tI+=c.iniOff; tM+=c.monOff; rows.push([s.name,c.iniOff,c.monOff]);
+      }
+      d.innerHTML=h; root.appendChild(d);
+    });
+    root.querySelectorAll('input[data-store]').forEach(function(i){i.addEventListener('change',function(){byId(STORES,i.dataset.store).on=i.checked;renderC();});});
+    root.querySelectorAll('input[data-init]').forEach(function(i){i.addEventListener('change',function(){var a=i.dataset.init.split(':');byId(STORES,a[0])['i_'+a[1]]=i.checked;renderC();});});
+    root.querySelectorAll('input[data-plan]').forEach(function(i){i.addEventListener('change',function(){var a=i.dataset.plan.split(':');byId(STORES,a[0]).plan=a[1];renderC();});});
+    var h='<h3>店舗ごとの内訳</h3><ul>';
+    rows.forEach(function(r){h+='<li><span>'+r[0]+'</span><span>'+yen(r[1])+' ＋ '+yen(r[2])+'/月</span></li>';});
+    h+='<li><span><b>初期費用 合計</b></span><span>'+yen(tI)+'</span></li><li><span><b>月額 合計</b></span><span>'+yen(tM)+'/月</span></li><li><span><b>1年目の総額</b></span><span>'+yen(tI+tM*12)+'</span></li></ul>';
+    document.getElementById('summaryC').innerHTML=h;
+    setBar(tI,active.length+'店舗・1年契約・月払い（LP ¥0）',tM,'月額 合計（2店舗目以降 −20%）',active.length>1?'複数店舗で <b>'+yen((function(){var s=0;active.forEach(function(st,i){var c=storeCalc(st,i);s+=(c.ini-c.iniOff)+(c.mon-c.monOff)*12;});return s;})())+'</b> お得（1年目）':'');
+  }
+
+  /* ===== バー・モード ===== */
+  function setBar(init,initSub,mon,monSub,note){
+    document.getElementById('tInit').textContent=yen(init);
+    document.getElementById('tInitSub').textContent=initSub;
+    document.getElementById('tMon').innerHTML=yen(mon)+'<small>/月</small>';
+    document.getElementById('tMonSub').textContent=monSub;
+    var s=document.getElementById('tSet'); s.innerHTML=note||''; s.className='set'+(note?' on':'');
+  }
+  document.querySelectorAll('.mode').forEach(function(m){m.addEventListener('click',function(){
+    state.mode=m.dataset.mode;
+    document.querySelectorAll('.mode').forEach(function(x){x.classList.toggle('on',x===m);});
+    document.querySelectorAll('.pane').forEach(function(p){p.classList.toggle('on',p.id==='pane-'+state.mode);});
+    if(state.mode==='a')renderA(); if(state.mode==='b')renderB(); if(state.mode==='c')renderC();
+    window.scrollTo({top:0,behavior:'smooth'});
+  });});
+  ['bMon','bInit'].forEach(function(id){document.getElementById(id).addEventListener('input',renderB);});
+  renderA();
+})();
+</script>
+
+</body></html>
