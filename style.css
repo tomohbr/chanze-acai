@@ -323,3 +323,10 @@ section{padding:clamp(110px,14vw,200px) 0;}
 .white .tmp{color:var(--gold);}
 .hero-in .h1{font-size:clamp(30px,3.5vw,52px);}
 @media(max-width:700px){.hero-in .h1{font-size:clamp(28px,7.6vw,36px);}}
+
+/* ---- 写真のパララックス（枠の中で写真だけがゆっくり動く） ---- */
+.fig[data-parallax] img{height:120%;will-change:transform;}
+.hero-fig[data-parallax] img{height:120%;top:-10%;}
+.hero-fig[data-parallax] img{transition:clip-path var(--slow) var(--ease);}
+.hero-fig.is-in[data-parallax] img{transform:translateY(-8%);}
+@media (prefers-reduced-motion:reduce){.fig[data-parallax] img,.hero-fig[data-parallax] img{height:100%;top:0;transform:none!important;}}

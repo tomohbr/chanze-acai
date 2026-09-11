@@ -75,7 +75,8 @@ var CONFIG = {
     function move() {
       var vh = window.innerHeight;
       px.forEach(function (img) {
-        var r = img.parentElement.getBoundingClientRect();
+        var box = img.closest("[data-parallax]") || img.parentElement;
+        var r = box.getBoundingClientRect();
         if (r.bottom < 0 || r.top > vh) return;
         var p = (r.top + r.height / 2 - vh / 2) / vh; // -1..1
         img.style.transform = "translateY(" + (-8 + p * -6) + "%)";
