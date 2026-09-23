@@ -20,7 +20,19 @@ var CONFIG = {
     var gm = document.createElement("meta"); gm.name = "google-site-verification"; gm.content = CONFIG.GSC_META;
     document.head.appendChild(gm);
   }
-  function track(name, params) { if (window.gtag) window.gtag("event", name, params || {}); }
+  // 流入元（Instagramのプロフィールリンクなど utm_source 付き）をセッション中は保持して、クリック計測に付ける
+  var SRC = (function () {
+    try {
+      var q = new URLSearchParams(location.search).get("utm_source");
+      if (q) sessionStorage.setItem("src", q);
+      return q || sessionStorage.getItem("src") || "";
+    } catch (e) { return ""; }
+  })();
+  function track(name, params) {
+    params = params || {};
+    if (SRC) params.src = SRC;
+    if (window.gtag) window.gtag("event", name, params);
+  }
   if (CONFIG.GA_ID) {
     var gs = document.createElement("script"); gs.async = true;
     gs.src = "https://www.googletagmanager.com/gtag/js?id=" + CONFIG.GA_ID;
@@ -41,7 +53,7 @@ var CONFIG = {
       var seen = {};
       new IntersectionObserver(function (es) { es.forEach(function (e) {
         if (e.isIntersecting && !seen[e.target.id]) { seen[e.target.id] = 1; track("section_view", { section: e.target.id }); }
-      }); }, { threshold: 0.4 }).observe && ["bowls", "order", "access", "members"].forEach(function (id) {
+      }); }, { threshold: 0.4 }).observe && ["feel", "why", "craft", "bowls", "order", "members", "access", "faq"].forEach(function (id) {
         var el = document.getElementById(id); if (el) new IntersectionObserver(function (es) { es.forEach(function (e) {
           if (e.isIntersecting && !seen[id]) { seen[id] = 1; track("section_view", { section: id }); }
         }); }, { threshold: 0.4 }).observe(el);
@@ -101,12 +113,14 @@ var CONFIG = {
 
   /* ---- 受付状況（今注文できるか） ---- */
   (function () {
-    var h = CONFIG.HOURS; if (!h) return;
+    var h = window.CHANZE_HOURS || CONFIG.HOURS; if (!h) return;
     var now = new Date();
     function mins(t) { var p = t.split(":"); return +p[0] * 60 + +p[1]; }
-    var cur = now.getHours() * 60 + now.getMinutes();
+    var cur = now.getHours() * 60 + now.getMinutes(), day = now.getDay();
+    // 閉店が24時を過ぎる場合（例 25:00）、0時〜閉店までは前日の営業として扱う
+    if (mins(h.close) > 1440 && cur < mins(h.close) - 1440) { cur += 1440; day = (day + 6) % 7; }
     var last = mins(h.close) - (h.prep || 0);
-    var closedToday = (h.closed || []).indexOf(now.getDay()) >= 0;
+    var closedToday = (h.closed || []).indexOf(day) >= 0;
     var open = !closedToday && cur >= mins(h.open) && cur <= last;
     var text, off = !open;
     if (open) text = "受付中 — 本日 " + h.open + " 〜 " + h.close;
